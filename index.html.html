@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Task Manager</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    min-height: 100vh;
+
+    background: linear-gradient(
+        135deg,
+        #0f2027,
+        #203a43,
+        #2c5364
+    );
+
+    color: white;
+}
+
+.card{
+    background: rgba(255,255,255,.10);
+    padding: 25px;
+    border-radius: 15px;
+    backdrop-filter: blur(8px);
+}
+
+h2{
+    text-align:center;
+}
+
+h3{
+    border-bottom:1px solid rgba(255,255,255,.3);
+    padding-bottom:5px;
+}
+
+input,
+select,
+textarea{
+
+    width:100%;
+    padding:12px;
+    margin:6px 0;
+    border:none;
+    border-radius:6px;
+    box-sizing:border-box;
+
+}
+
+button{
+
+    padding:12px 20px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    color:white;
+    font-weight:bold;
+
+}
+
+.guardar{
+    background:#28a745;
+}
+
+.limpiar{
+    background:#6c757d;
+}
+
+button:hover{
+    opacity:.9;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>📋 Control de Tareas</h2>
+
+<h3>Información General</h3>
+
+<input
+id="titulo"
+placeholder="Título de la tarea">
+
+<select id="categoria">
+
+<option value="">
+Categoría
+</option>
+
+<option>Mantenimiento</option>
+<option>Tool Crib</option>
+<option>Compras</option>
+<option>Proyecto</option>
+<option>Documentación</option>
+<option>Capacitación</option>
+
+</select>
+
+<select id="prioridad">
+
+<option value="">
+Prioridad
+</option>
+
+<option>Baja</option>
+<option>Media</option>
+<option>Alta</option>
+<option>Crítica</option>
+
+</select>
+
+<select id="estado">
+
+<option value="">
+Estado
+</option>
+
+<option>Pendiente</option>
+<option>En Proceso</option>
+<option>Detenida</option>
+<option>Completada</option>
+<option>Cancelada</option>
+
+</select>
+
+<select id="avance">
+
+<option value="0">0%</option>
+<option value="25">25%</option>
+<option value="50">50%</option>
+<option value="75">75%</option>
+<option value="100">100%</option>
+
+</select>
+
+<input
+type="date"
+id="fechaCompromiso">
+
+<input
+id="asignadoPor"
+list="listaAsignados"
+placeholder="Asignado Por">
+
+<datalist id="listaAsignados">
+</datalist>
+
+<textarea
+id="comentarios"
+rows="4"
+placeholder="Comentarios">
+</textarea>
+
+<br><br>
+
+<button
+class="guardar"
+onclick="guardarTarea()">
+
+Guardar
+
+</button>
+
+<button
+class="limpiar"
+onclick="limpiarCampos()">
+
+Limpiar
+
+</button>
+
+</div>
+
+<script>
+
+let asignadores =
+JSON.parse(
+localStorage.getItem("asignadores")
+) || [];
+
+function cargarAsignadores(){
+
+    const lista =
+    document.getElementById("listaAsignados");
+
+    lista.innerHTML = "";
+
+    asignadores.forEach(nombre => {
+
+        const opcion =
+        document.createElement("option");
+
+        opcion.value = nombre;
+
+        lista.appendChild(opcion);
+
+    });
+
+}
+
+function guardarTarea(){
+
+    const estado =
+    document.getElementById("estado").value;
+
+    let avance =
+    document.getElementById("avance").value;
+
+    let fechaCierre = "";
+
+    if(estado === "Completada"){
+
+        avance = "100";
+
+        fechaCierre =
+        new Date().toLocaleDateString();
+
+    }
+
+    const asignadoPor =
+    document.getElementById("asignadoPor").value;
+
+    if(
+        asignadoPor &&
+        !asignadores.includes(asignadoPor)
+    ){
+
+        asignadores.push(asignadoPor);
+
+        localStorage.setItem(
+            "asignadores",
+            JSON.stringify(asignadores)
+        );
+
+    }
+
+    const datos = {
+
+        fechaCreacion:
+        new Date().toLocaleString(),
+
+        titulo:
+        document.getElementById("titulo").value,
+
+        categoria:
+        document.getElementById("categoria").value,
+
+        prioridad:
+        document.getElementById("prioridad").value,
+
+        estado:
+        estado,
+
+        avance:
+        avance + "%",
+
+        fechaCompromiso:
+        document.getElementById("fechaCompromiso").value,
+
+        asignadoPor:
+        asignadoPor,
+
+        comentarios:
+        document.getElementById("comentarios").value,
+
+        fechaCierre:
+        fechaCierre
+
+    };
+
+    fetch(
+    "https://script.google.com/macros/s/AKfycbySw0YfJMA9eURjMAEQDEIJlcM_Hg9N0loLlAiRV4denEaI3JFN7oHVusKRFfn7wfRt/exec",
+    {
+        method:"POST",
+        body:JSON.stringify(datos)
+    })
+
+
+
+    .then(r => r.text())
+
+    .then(() => {
+
+        alert("Tarea Guardada");
+
+        cargarAsignadores();
+
+        limpiarCampos();
+
+    })
+
+
+    .catch(error => {
+ 
+	alert("Error:\n" +error.message);
+ 
+	console.error(error);
+ 
+    });
+
+}
+
+function limpiarCampos(){
+
+    document.getElementById("titulo").value = "";
+    document.getElementById("categoria").value = "";
+    document.getElementById("prioridad").value = "";
+    document.getElementById("estado").value = "";
+    document.getElementById("avance").value = "0";
+    document.getElementById("fechaCompromiso").value = "";
+    document.getElementById("asignadoPor").value = "";
+    document.getElementById("comentarios").value = "";
+
+}
+
+cargarAsignadores();
+
+</script>
+
+</body>
+
+</html>
